@@ -6,11 +6,21 @@ Terraform has a great Gitlab provider with docs available at
 For my own needs, I'll be looking into modifying project/repository details
 with terraform itself.
 
+## Gitlab provider
+
+Notes for myself:
+
+https://www.terraform.io/docs/providers/gitlab/index.html
+
+- token: - (Optional) This is the GitLab personal access token. It must be provided, but it can also be sourced from the GITLAB_TOKEN environment variable.
+
+- base_url: - (Optional) This is the target GitLab base API endpoint. Providing a value is a requirement when working with GitLab CE or GitLab Enterprise e.g. https://my.gitlab.server/api/v4/. It is optional to provide this value and it can also be sourced from the GITLAB_BASE_URL environment variable. The value must end with a slash.
+
 ## Gitlab project
 
 https://www.terraform.io/docs/providers/gitlab/r/project.html
 
-Enables to modify or remove projects.
+Enables to modify or remove git repos hosted on Gitlab.com.
 
 Terraform can also import existing projects, so it
 can modify them.
