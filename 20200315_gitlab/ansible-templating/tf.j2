@@ -1,0 +1,11 @@
+
+resource "gitlab_project" "{{ item.name }}" {
+    name = "{{ item.name }}"
+    description = "this is the {{ item.name }} repo"
+    visibility_level = "private"
+    request_access_enabled = false
+    default_branch = "master"
+    merge_requests_enabled = true
+    issues_enabled = true
+    wiki_enabled = false
+}

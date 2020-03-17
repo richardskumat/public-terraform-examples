@@ -6,6 +6,121 @@ Terraform has a great Gitlab provider with docs available at
 For my own needs, I'll be looking into modifying project/repository details
 with terraform itself.
 
+The term 'project' in this readme is used interchangeably
+with git repository.
+
+## Gitlab API
+
+My goal of using the Gitlab provider of terraform is to bring my gitlab
+repositories under terraform control, so I can update the repo configs
+without the web ui.
+
+To achieve this, I need a list of projects that are owned by my user.
+
+https://docs.gitlab.com/ee/api/projects.html#list-user-projects
+
+There's a link above that details on how to get this list.
+
+The idea is to get a list of repos from the Gitlab API,
+then feed this list to terraform import.
+
+I've found no way to do this directly via terraform so I had to
+resort to using curl and the gitlab api docs.
+
+The base URL for the Gitlab API is https://my.gitlab.server/api/v4/.
+
+For gitlab.com, this is https://gitlab.com/api/v4/.
+
+We need to add '/users/:user_id/projects' the Gitlab.com url above,
+and replace :user_id with our username/id.
+
+https://gitlab.com/api/v4/users/username/projects
+
+If I curl the above url, I only get the public projects for a user.
+
+If we modify a curl request with an extra header, then
+we'll get the private projects as well in the response.
+
+```bash
+curl --header "PRIVATE-TOKEN: <your_access_token>" https://gitlab.com/api/v4/users/username/projects
+```
+
+By using jq, we can filter the json input gitlab provides. The idea is to save
+it to a local file, and then use jq to filter locally.
+
+```bash
+curl --header "PRIVATE-TOKEN: <your_access_token>" https://gitlab.com/api/v4/users/username/projects | jq '.' > projects
+```
+
+Jq makes the json input readable, so by looking at the file,
+I know I'm looking for the 'path_with_namespace' key values.
+
+Because I'm not proficient with json and jq, I had to search
+for a time how to do the following filtering.
+
+```bash
+jq '.[].path_with_namespace' projects
+```
+
+'projects' is the local file of the json input.
+
+This gave me a list of my projects, however something looked
+weird.
+
+I piped the above jq command to wc -l and found out that
+Gitlab by default only returned the first 20 objects.
+
+This is noted on https://docs.gitlab.com/ee/api/projects.html#list-user-projects:
+
+```none
+Note: This endpoint supports [keyset pagination](https://docs.gitlab.com/ee/api/README.html#keyset-based-pagination) for selected order_by options.
+```
+
+So I had a look at https://docs.gitlab.com/ee/api/README.html#keyset-based-pagination, and
+I found that I had to modify my request to the Gitlab API to request a larger page of
+my repo list.
+
+So then I ran:
+
+```bash
+curl --header "PRIVATE-TOKEN: <your_access_token>" "https://gitlab.com/api/v4/users/username/projects?pagination=keyset&per_page=100&order_by=id&sort=a
+sc" | jq '.' > projects
+```
+
+and again filtered the projects file with jq, to get my project list
+in the namespace format that terraform import can use.
+
+Now what's left is importing my project list to terraform.
+
+### Importing Gitlab data into Terraform state files
+
+This look way longer that I anticipated.
+
+First of all, I had to fool around with bash code to get
+a proper loop to import all 36 of my Gitlab repos into
+Terraform.
+
+Then I found another roadblock in my way.
+
+To import data into terraform, a resource block has to exist.
+This meant for me, that I had to define 36 resource blocks of gitlab_projects
+in my tf file. Surely, there's a better way than this?
+
+I was not about to manually copy-paste and modify the same resource block 36 times,
+so I had to come up with a way to template a resource block and replace
+the needed values with variables.
+
+It occurred to me right away, I could just hope to Ansible and use the template
+module locally and have jinja come up with the resource blocks I needed.
+
+### Ansible with the template module
+
+This required some yaml massaging, but I finally got it right after some time.
+
+I gave first, then came back later to this issue with a clearer mind.
+
+The resulting files can be found in the ansible-templating subdirectory.
+
 ## Gitlab provider
 
 Notes for myself:
@@ -27,9 +142,9 @@ can modify them.
 
 Eg:
 
-terraform import gitlab_project.example richardskumat/playground
+terraform import gitlab_project.example username/repo
 
-This can also be used to enable issues, merge requests and the wiki for
+This can also be used to enable or disable issues, merge requests and the wiki for
 a repo.
 
 First, I was looking at the Github provider for Terraform and I couldn't
