@@ -97,8 +97,6 @@ sc" | jq '.' > projects
 and again filtered the projects file with jq, to get my project list
 in the namespace format that terraform import can use.
 
-Now what's left is importing my project list to terraform.
-
 ### Importing Gitlab data into Terraform state files
 
 This look way longer that I anticipated.
@@ -119,6 +117,12 @@ the needed values with variables.
 
 It occurred to me right away, I could just hope to Ansible and use the template
 module locally and have jinja come up with the resource blocks I needed.
+
+I also wrote a shell script to loop through a list
+of my git repos and call terraform import
+for each loop.
+
+The file's called terraform-import-project.sh.
 
 ### Ansible with the template module
 
@@ -156,6 +160,7 @@ a repo.
 
 First, I was looking at the Github provider for Terraform and I couldn't
 find the equivalent functionality for that provider.
+
 
 ## Gitlab project variable
 
@@ -246,6 +251,47 @@ environment_scope = "*"
 as per the [Gitlab project level variables docs](https://docs.gitlab.com/ee/api/project_level_variables.html).
 
 Which let the runners pick up my defined variables.
+
+Using some awk filtering, I managed to get a list of Terraform resource variable names
+into repo_var_list file.
+
+But for the terraform import to work, I also had to sort through the key values
+found in the gitlab-repo-vars.tf file. I sorted them into the repo_var_key_list file.
+
+What I had to ensure that the values in
+repo_var_list and repo_var_key_list were aligned.
+That each terraform gitlab_project_variable resource name had the right
+key value.
+
+Now was the time to make a shell script to iterate through these lists,
+but I hit a roadblock first because I couldn't get a proper for loop.
+
+Since I was already using awk a lot, I found a format I could use in
+a fairly simple while read loop.
+
+The format was the following:
+
+```none
+reponame_var1:key1
+reponame_var2:key2
+reponame_var3:key3
+```
+
+as can be seen in repo_vars_sorted.
+
+To merge repo_var_list and repo_var_key_list files together in the following format,
+I found a utility called paste.
+
+The following command merged them together:
+
+```bash
+paste -d":" repo_var_list repo_var_key_list > repo_vars_sorted
+```
+
+with ':' being the delimiter.
+
+Finally I could use sorted file with terraform-import-repo-vars.sh
+ to iterate over 30 terraform imports.
 
 ## Pipeline schedules
 
