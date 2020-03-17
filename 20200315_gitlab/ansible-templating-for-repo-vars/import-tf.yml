@@ -1,0 +1,18 @@
+---
+- hosts: local
+  gather_facts: no
+  vars:
+    var:
+      - name: repo1
+      - name: repo2
+
+  tasks:
+    - name: debug
+      debug: msg={{ item.name }}
+      loop: "{{ var }}"
+    #- name: create some file
+    #  template:
+    #    src=tf.j2
+    #    dest=output/{{ item.name }}
+    #  loop: "{{ var }}"
+    #  delegate_to: localhost

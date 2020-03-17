@@ -9,6 +9,13 @@ with terraform itself.
 The term 'project' in this readme is used interchangeably
 with git repository.
 
+## This will take only such and such time
+
+I thought none of this would take too long, but all this work turned out
+to be a lot more than I expected.
+
+There were many issues along the way and lots of doc readings, too.
+
 ## Gitlab API
 
 My goal of using the Gitlab provider of terraform is to bring my gitlab
@@ -166,7 +173,7 @@ for building and pushing docker images.
 
 ### Importing Gitlab project variables
 
-In my case, I've got less than a dozen docker image repos but share
+In my case, I've got 10 docker image repos but they share
 the same variables needed to push images to dockerhub, except
 for the dockerhub image name.
 
@@ -178,6 +185,67 @@ In the terraform docs, the example import command is the following:
 ```bash
 terraform import gitlab_project_variable.example 12345:project_variable_key
 ```
+
+So to sum it up, I've got 10 docker repos, each with 3 variables.
+
+So, I had to come up with 30 variations of terraform import.
+
+Plus, 30 variations of 30 resource configuration blocks.
+
+To come up with 30 resource configuration blocks I also copied
+yesterday's ansible code and just modified the template to
+create what I needed.
+
+This took me a couple of tries to get a valid configuration block
+for a gitlab repo variable.
+
+At this point, I foolishly ran a terraform apply, but first I
+ensured that my private and public repositories were appropriately
+configured.
+
+I also separated the gitlab_repo and gitlab_repo_vars resource
+definitions into separate files.
+
+My first error was omitting username from the resource block in tf.j2,
+which started as:
+
+```none
+project   = "{{ item.name }}"
+```
+
+Then I got an error from terraform saying it couldn't find the
+appropriate repository.
+
+I modified the template line to:
+
+```none
+project   = "username/{{ item.name }}"
+```
+
+which turned out to be correct.
+
+Another issue along the way was having:
+
+```none
+#environment_scope = "string"
+```
+
+commented out, since the docs says it's optional and valid
+values are strings.
+
+Then I pushed a few commits to Gitlab and my pipelines were
+failing since the gitlab-runners weren't picking up my
+terraform defined variables.
+
+I ended up modifying the environment scope to:
+
+```none
+environment_scope = "*"
+```
+
+as per the [Gitlab project level variables docs](https://docs.gitlab.com/ee/api/project_level_variables.html).
+
+Which let the runners pick up my defined variables.
 
 ## Pipeline schedules
 

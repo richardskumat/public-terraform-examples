@@ -1,0 +1,30 @@
+
+resource "gitlab_project_variable" "{{ item.name }}_var1" {
+   project   = "username/{{ item.name }}"
+   key       = "DOCKERHUB_USER"
+   value     = "qwe1"
+   #variable_type = #env_var, file
+   protected = false
+   masked = false
+   environment_scope = "*"
+}
+
+resource "gitlab_project_variable" "{{ item.name }}_var2" {
+   project   = "username/{{ item.name }}"
+   key       = "DOCKERHUB_PROJECT"
+   value     = "{{ item.name }}"
+   #variable_type = #env_var, file
+   protected = false
+   masked = false
+   environment_scope = "*"
+}
+
+resource "gitlab_project_variable" "{{ item.name }}_var3" {
+   project   = "username/{{ item.name }}"
+   key       = "DOCKERHUB_PASSWORD"
+   value     = var.gitlab_dockerhub_token
+   #variable_type = #env_var, file
+   protected = false
+   masked = false
+   environment_scope = "*"
+}
