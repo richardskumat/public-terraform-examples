@@ -164,6 +164,21 @@ This Terraform resource could prove very useful to ensure the consistency
 across many Gitlab projects that share the same variables/credentials
 for building and pushing docker images.
 
+### Importing Gitlab project variables
+
+In my case, I've got less than a dozen docker image repos but share
+the same variables needed to push images to dockerhub, except
+for the dockerhub image name.
+
+On my part, this also required some fooling around to get the proper
+incantation for terraform import.
+
+In the terraform docs, the example import command is the following:
+
+```bash
+terraform import gitlab_project_variable.example 12345:project_variable_key
+```
+
 ## Pipeline schedules
 
 https://www.terraform.io/docs/providers/gitlab/r/pipeline_schedule.html
