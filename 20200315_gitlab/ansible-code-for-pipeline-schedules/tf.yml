@@ -1,0 +1,18 @@
+---
+- hosts: local
+  gather_facts: no
+  vars:
+    var:
+      - name: repo1
+      - name: repo2
+
+  tasks:
+    - name: create some file
+      template:
+        src=cron.j2
+        dest=output/{{ item.name }}
+      loop: "{{ var }}"
+      delegate_to: localhost
+    - name: open firefox tabs
+      command: firefox-esr https://gitlab.com/username/{{ item.name }}/pipeline_schedules
+      loop: "{{ var }}"

@@ -1,0 +1,7 @@
+
+resource "gitlab_pipeline_schedule" "{{ item.name }}" {
+   project     = "username/{{ item.name }}"
+   description = "weekly scheduled ci run of {{ item.name }}"
+   ref         = "master"
+   cron        = "0 4 1 * 0"
+}

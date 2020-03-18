@@ -115,7 +115,7 @@ I was not about to manually copy-paste and modify the same resource block 36 tim
 so I had to come up with a way to template a resource block and replace
 the needed values with variables.
 
-It occurred to me right away, I could just hope to Ansible and use the template
+It occurred to me right away, I could just turn to Ansible and use the template
 module locally and have jinja come up with the resource blocks I needed.
 
 I also wrote a shell script to loop through a list
@@ -128,9 +128,9 @@ The file's called terraform-import-project.sh.
 
 This required some yaml massaging, but I finally got it right after some time.
 
-I gave first, then came back later to this issue with a clearer mind.
+I gave up first, then came back later to this issue with a clearer mind.
 
-The resulting files can be found in the ansible-templating subdirectory.
+The resulting files can be found in the ansible-templating-for-repos subdirectory.
 
 ## Gitlab provider
 
@@ -195,7 +195,8 @@ So to sum it up, I've got 10 docker repos, each with 3 variables.
 
 So, I had to come up with 30 variations of terraform import.
 
-Plus, 30 variations of 30 resource configuration blocks.
+Plus, I had add 30 resource configuration blocks to
+my tf files.
 
 To come up with 30 resource configuration blocks I also copied
 yesterday's ansible code and just modified the template to
@@ -209,7 +210,7 @@ ensured that my private and public repositories were appropriately
 configured.
 
 I also separated the gitlab_repo and gitlab_repo_vars resource
-definitions into separate files.
+definitions into separate .tf files.
 
 My first error was omitting username from the resource block in tf.j2,
 which started as:
@@ -258,7 +259,7 @@ into repo_var_list file.
 But for the terraform import to work, I also had to sort through the key values
 found in the gitlab-repo-vars.tf file. I sorted them into the repo_var_key_list file.
 
-What I had to ensure that the values in
+Then I had to ensure that the values in
 repo_var_list and repo_var_key_list were aligned.
 That each terraform gitlab_project_variable resource name had the right
 key value.
@@ -282,7 +283,7 @@ as can be seen in repo_vars_sorted.
 To merge repo_var_list and repo_var_key_list files together in the following format,
 I found a utility called paste.
 
-The following command merged them together:
+The following command merged the 2 files together:
 
 ```bash
 paste -d":" repo_var_list repo_var_key_list > repo_vars_sorted
@@ -300,4 +301,27 @@ https://www.terraform.io/docs/providers/gitlab/r/pipeline_schedule.html
 I've got many projects here on Gitlab.com and trying to manage the schedules
 for all of them is manual and messy.
 
-Will need to look into this.
+Sadly, there's no import function for terraform for schedules.
+
+My idea at this time was to create new schedules with terraform.
+
+To create the 30+ resource block I used Ansible with
+the template module, just like previously.
+
+This was very simple.
+
+After running terraform apply, I realised that I still had all my previously
+manually defined schedules on Gitlab.com repos.
+
+Since TF can't import schedules, I had to resort to manually delete them.
+
+I was OK with manual deletion of old schedules since some of my repos
+that needed schedules didn't have any.
+
+However, to do it via the browser would have taken a long time.
+
+I wrote an Ansible task to open firefox-esr at the right urls
+with a loop.
+
+The sample ansible code is in the ansible-code-for-pipeline-schedules
+directory.
