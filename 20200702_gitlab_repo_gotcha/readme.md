@@ -10,7 +10,7 @@ shared_runners_enabled = true
 
 Here's an example resource block:
 
-```
+<pre>
 resource "gitlab_project" "ansible-role-chrome" {
     name = "ansible-role-chrome"
     description = "this is the ansible-role-chrome repo"
@@ -21,7 +21,7 @@ resource "gitlab_project" "ansible-role-chrome" {
     issues_enabled = true
     wiki_enabled = false
     shared_runners_enabled = true
-```
+</pre>
 
 Related links:
 
