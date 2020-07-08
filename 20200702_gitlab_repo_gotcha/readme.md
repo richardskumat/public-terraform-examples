@@ -21,6 +21,7 @@ resource "gitlab_project" "ansible-role-chrome" {
     issues_enabled = true
     wiki_enabled = false
     shared_runners_enabled = true
+}
 </pre>
 
 Related links:
